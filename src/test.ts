@@ -11,7 +11,7 @@ const knex = Knex({
   useNullAsDefault: true
 });
 
-const userData = {} as DataAPI<'user'>;
+const dataAPI = {} as DataAPI;
 
 (async () => {
   // Setup SQLite table
@@ -20,17 +20,32 @@ const userData = {} as DataAPI<'user'>;
     table.json('value');
   });
 
-  await userData.insert('user_123', {
+  const userData = {
     preferences: {
       theme: 'dark',
-      notifications: true
-    }
-  });
+      notifications: true,
+    },
+  } as const;
+
+  // Inserting data for the 'user' namespace
+  await dataAPI.insert('user', 'user_collection', 'user_1', userData);
 
   // Filter users by preferences
   // const filters = { 'preferences.theme': 'dark' } as const;
-  const users = await userData.findByKeyPrefixAndJsonFields('user_', { 'preferences.theme': 'dark' });
+  // const users = await userData.findByKeyPrefixAndJsonFields('user_', { 'preferences.theme': 'dark' });
+  const users = await dataAPI.findByKeyPrefixAndJsonFields('user', 'user_collection', 'user_', { 'preferences.theme': 'dark' });
+
   console.log(users);
+
+  await dataAPI.update('user', 'user_collection', 'user_1', {
+    preferences: {
+      theme: 'light',
+      notifications: true,
+    },
+  });
+
+  // Deleting data for the 'user' namespace
+  await dataAPI.delete('user', 'user_collection', 'user_1');
 
   await knex.destroy();
 })();
